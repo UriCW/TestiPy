@@ -1,8 +1,10 @@
 import requests
 import re
+import copy
 import logging
 import json
 import urllib3
+from Testi.Responsi import Responsi
 
 
 class Requesti():
@@ -46,31 +48,31 @@ class Requesti():
         return matched
 
     @staticmethod
-    def populate_response(response_dict):
+    def populate_response(har_entry):
         """ Populate a requests.Response object from a dictionary
 
-        Arguments:
-            response_dict:
-                A dictionary of response in the format of a har file entry
-        Returns: A requests.Response object with those populated values
-        """
-        content_text = response_dict['content']['text']
-        headers = response_dict['headers']
-        # name/value list into key:value dict
-        headers = {h['name']: h['value'] for h in headers}
-        status = response_dict['status']
-        cookies = response_dict['cookies']
-        ret = requests.Response()
-        resp = urllib3.response.HTTPResponse(
-            content_text,
-            headers=headers,
-            status=status)
-        ret.raw = resp
-        ret.status_code = status
-        ret.headers = headers
-        ret.cookies = cookies
-        # Can't easily override requests.Response.text >:( !!!
-        return ret
+        # Arguments:
+        #     har_entry:
+        #         A dictionary of request/response pair in the format of a har file entry
+        # Returns: A mocked requests.Response (Responsi) object with those populated values
+        # """
+        # content_text = response_dict['content']['text']
+        # headers = response_dict['headers']
+        # # name/value list into key:value dict
+        # headers = {h['name']: h['value'] for h in headers}
+        # status = response_dict['status']
+        # cookies = response_dict['cookies']
+        # ret = requests.Response()
+        # resp = urllib3.response.HTTPResponse(
+        #     content_text,
+        #     headers=headers,
+        #     status=status)
+        # ret.raw = resp
+        # ret.status_code = status
+        # ret.headers = headers
+        # ret.cookies = cookies
+        # # Can't easily override requests.Response.text >:( !!!
+        # return ret
 
     def mock_get(self, url, params=None, **kwargs):
         """ Mock requests.get calls by replying matched responses from capture.
@@ -89,8 +91,10 @@ class Requesti():
         if self.exact_urls and not params:
             matched = [e for e in self.capture if e['request']['url'] == url]
             if len(matched) == 1:
-                resp_dict = matched[0]['response']
-                resp = populate_response(resp_dict)
+                return Responsi(matched[0])
+                # resp = populate_response(matched[0])
+                #resp_dict = matched[0]['response']
+                #resp = populate_response(resp_dict)
             if len(matched) == 0:
                 raise Warning("No packets matched url {}".format(url))
             if len(matched > 1):
@@ -115,5 +119,5 @@ class Requesti():
             requests.get = self.mock_get
             func()
             # Restore original method
-            requsts.get = original_requests_get
+            requests.get = original_requests_get
         return wrapper
