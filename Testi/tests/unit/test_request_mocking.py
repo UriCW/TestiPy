@@ -1,4 +1,4 @@
-from Testi import Requesti
+from Testi import Requesti, patch_requests
 import copy
 import requests
 
@@ -25,25 +25,13 @@ def test_find_packets():
     assert len(matched) == 290
 
 
-def test_get_override():
-    requesti = Requesti("./Testi/tests/data/parliament_uk_session.har")
-
-    get_method = copy.copy(requests.get)
-
-    @requesti.inject_get_request
-    def test_inner():
-        assert requests.get is not get_method
-    test_inner()
-    assert requests.get is get_method
-
-
-def test_get():
-    requesti = Requesti("./Testi/tests/data/parliament_uk_session.har")
-
-    @requesti.inject_get_request
-    def fetch():
-        txt = requests.get("https://search-material.parliament.uk/search")
-        print(txt)
-        assert False
-
-    fetch()
+# @patch_requests("./Testi/tests/data/parliament_uk_session.har")
+@patch_requests("./Testi/tests/data/parliament_uk_session.har")
+def test_patch():
+    resp = requests.get("https://search-material.parliament.uk/search")
+    # print(resp.headers)
+    assert "<!DOCTYPE html>\r\n<!--[if IE 7]> " in resp.text
+    assert "To retrieve earlier debates, please" in resp.text
+    assert resp.status_code == 200
+    # assert resp.headers[""]
+    # assert False

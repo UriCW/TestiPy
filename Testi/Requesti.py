@@ -14,9 +14,9 @@ class Requesti():
         Arguments:
             capture_file: A path to a .har file
             exact_urls:
+                @TODO
                 If False, preform some preprocesing of URLs to match against
                 remove http[s]://www and trailing /, lowercase.
-                Not implemented
         """
         self.exact_urls = exact_urls
         if capture_file.endswith(".har"):
@@ -34,8 +34,8 @@ class Requesti():
         Arguments:
             url_regex: match only packets with url matching this regex statement
             params:
+                @TODO
                 an optional dictionary of additional http request header filters
-                Not implemented!
         Returns: 
             A list of matching request/response pairs from capture file
         """
@@ -46,33 +46,6 @@ class Requesti():
             if re.match(url_regex, e['request']['url'])
         ]
         return matched
-
-    @staticmethod
-    def populate_response(har_entry):
-        """ Populate a requests.Response object from a dictionary
-
-        # Arguments:
-        #     har_entry:
-        #         A dictionary of request/response pair in the format of a har file entry
-        # Returns: A mocked requests.Response (Responsi) object with those populated values
-        # """
-        # content_text = response_dict['content']['text']
-        # headers = response_dict['headers']
-        # # name/value list into key:value dict
-        # headers = {h['name']: h['value'] for h in headers}
-        # status = response_dict['status']
-        # cookies = response_dict['cookies']
-        # ret = requests.Response()
-        # resp = urllib3.response.HTTPResponse(
-        #     content_text,
-        #     headers=headers,
-        #     status=status)
-        # ret.raw = resp
-        # ret.status_code = status
-        # ret.headers = headers
-        # ret.cookies = cookies
-        # # Can't easily override requests.Response.text >:( !!!
-        # return ret
 
     def mock_get(self, url, params=None, **kwargs):
         """ Mock requests.get calls by replying matched responses from capture.
@@ -121,3 +94,18 @@ class Requesti():
             # Restore original method
             requests.get = original_requests_get
         return wrapper
+
+
+def patch_requests(func, capture_file):
+    """ Patch requests.get and requests.post
+    """
+    # Keep a copy of the original method
+    original_requests_get = copy.copy(requests.get)
+    requesti = Requesti(capture_file)
+
+    def wrapper(*args,  **kwargs):
+        requests.get = requesti.mock_get
+        func()
+        # Restore original method
+        requests.get = original_requests_get
+    return wrapper
