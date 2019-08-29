@@ -25,3 +25,4 @@ class Responsi():
 
     def json():
         raise NotImplementedError("not decoding JSON just yet...")
+    # TODO all the rest of requests.Response methods
