@@ -1,0 +1,4 @@
+include README.md LICENSE
+include requirements.txt
+recursive-include Testi *.har
+recursive-include Testi *.py
